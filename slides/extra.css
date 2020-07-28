@@ -1,0 +1,73 @@
+.hex-sticker img {
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  object-fit: contain;
+  width: 20%;
+  height: 20%;
+  padding: 10px;
+}
+
+h1 { /* Header 2 */
+  font-size: 28px;
+  color: Tomato;
+}
+
+.left-header {
+  color: #777;
+  width: 20%;
+  float: left;
+}
+
+/* Style the header */
+.header {
+  padding: 30px;
+  height: 20%;
+  text-align: center;
+  font-size: 28px;
+  color: white;
+}
+
+.right-header {
+  width: 75%;
+  float: left
+  padding-top: 1em;
+}
+
+.img-fill img { object-fit: fill; height:100%; width:100%; overflow: hidden}
+.img-fill-50 img { object-fit: fill; height:50%; width:50%; overflow: hidden}
+.img-fill-80 img { object-fit: fill; height:80%; width:80%; overflow: hidden}
+.img-contain img { object-fit: contain; height:100%; width:100%; overflow: hidden}
+.img-cover img { object-fit: cover; height:100%; width:100%;  overflow: hidden}
+.img-none img { object-fit: none; height:100%; width:100%; }
+
+mark {
+  color: White;
+  font-size: 18pt;
+  background-color: Gray;
+}
+
+p, li {
+  font-size: 18pt;
+}
+
+div.remark-code{
+  overflow: scroll
+  color: White;
+  background-color: Red;
+}
+
+.remark-code-line-highlighted{
+ color: Black;
+}
+.footer {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  text-align: left;
+}
+
+span.match {
+  color: black;
+}

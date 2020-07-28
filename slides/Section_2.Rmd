@@ -1,0 +1,536 @@
+---
+title: "Better Data Cleaning using R and the Tidyverse"
+subtitle: "Section 2: Tidy Data"
+author: "Mark Christopher Adkins"
+institute: "York University"
+date: "2020/06/08 (last updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    css: ["default","extra.css"]
+    seal: false
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      titleSlideClass: ["middle","center","inverse"]
+---
+class: inverse
+
+background-image: url(../slides/images/better_data_cleaning_splash_slide_section_2.png)
+background-position: center
+background-size: contain
+---
+class: center, inverse
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+library(here)
+library(DT)
+library(tidyverse)
+```
+
+
+</br></br></br>
+
+.left[
+> “Happy families are all alike; every unhappy family is unhappy in its own way.”
+
+]
+.right[Leo Tolstoy]
+
+--
+
+</br></br></br>
+
+.left[
+> “Tidy datasets are all alike, but every messy dataset is messy in its own way.”
+
+]
+
+.right[Hadley Wickham]
+
+---
+class: inverse
+
+## Tidy Data
+
+There are three aspects of tidy data
+
+  1. Each variable forms a column.
+  2. Each observation forms a row.
+  3. Each type of observational unit forms a table.
+
+If we can get data into this form, then analyses and plots are much easier to generate.
+
+---
+class: inverse
+
+## The Usual Suspects
+
+Often, it's the first guideline that I find is the usual culprit.
+
+Multiple variables are encoded together within a single column.
+  * e.g., Participant ID
+    * 100m25
+    * This is the 100th subject who is a 25 year-old male
+
+--
+
+Another culprit is to have information captured in the variable names.
+  * This is often done regarding study design features
+    * e.g., Condition or time value was recorded
+    
+But sometimes, it can be hard to see "problems". So let's try an example.
+
+???
+Wickham, H. (2014). Tidy data. Journal of Statistical Software, 59(10), 1-23.
+
+---
+
+## Example 1: `mtcars`
+Let's take a look at the `mtcars` data set. It has `r nrow(mtcars)` rows and `r ncol(mtcars)` columns. Only 8 columns are shown here.
+
+```{r, echo=FALSE}
+mtcars %>% 
+  select(1:8) %>% 
+  datatable(fillContainer = FALSE,
+            options = list(pageLength = 7))
+```
+
+???
+
+But it also has information stored as rownames, these should be a vector in the data.frame. Furthermore, each row name contains the make and model of each car. Let's break these apart.
+
+---
+class: inverse
+
+.hex-sticker[![](../slides/images/tibble.png)]
+
+## Example 1: `mtcars`
+
+The first step is to extract the row names and make them a variable within our data.frame/tibble.
+
+**Remember** - always give good, descriptive names
+
+```{r rownames_to_column_example,eval=FALSE}
+mtcars %>% 
+  rownames_to_column(var = "make_model") %>% #<<
+  View()
+```
+---
+
+## Example 1: `mtcars`
+
+Let's check the results. Again, only a subset of columns are displayed here.
+
+```{r, echo=FALSE}
+mtcars %>% 
+  rownames_to_column(var = "make_model") %>%
+  select(1:7) %>% 
+  datatable(fillContainer = FALSE,
+            options = list(pageLength = 7))
+```
+---
+class: inverse
+
+## Example 1: `mtcars`
+
+For the next step we want to break apart or `separate()` the make_model column into two pieces.
+
+--
+
+.hex-sticker[![](../slides/images/tidyr.png)]
+The easy part is finding a function which can do this.
+
+--
+
+The hard part is telling the function exactly where to perform the splitting operation so that we have the model in one column and the make of the car in the other.
+
+```{r eval=FALSE}
+mtcars %>% 
+  rownames_to_column(var = "make_model") %>% 
+  separate(col = ,#<<
+           into = , #<<
+           sep = ) #<<
+```
+--
+
+  * `col` specifies the column we want to break apart
+  * `into` specifies the names of the columns we want to break it into
+  * `sep` is the break point
+---
+class: inverse
+
+.hex-sticker[![](../slides/images/tidyr.png)]
+
+## Example 1: `mtcars`
+
+```{r results='hide'}
+mtcars %>% 
+  rownames_to_column(var = "make_model") %>% 
+  separate(col = "make_model", #<<
+           into = c("make","model"), #<<
+           sep = " ") #<<
+```
+
+--
+
+The first warning tells us that using a space character as the break point of the `make_model` column resulted in three pieces when we expected only 2 pieces (though only for 3 rows in our dataset).
+
+--
+
+The second warning tells us that 1 row in our data set did not have any spaces at all.
+
+--
+
+This means that we need to tell our `separate()` function how we want to handle this potential loss of information.
+---
+class: inverse
+
+.hex-sticker[![](../slides/images/tidyr.png)]
+
+## Example 1: `mtcars`
+
+```{r eval=FALSE}
+mtcars %>% 
+  rownames_to_column(var = "make_model") %>% 
+  separate(col = "make_model",
+           into = c("make","model"),
+           sep = " ",
+           extra = "merge", #<<
+           fill = "right") #<<
+```
+--
+
+--
+
+  * `extra` tells the function what to do with the extra pieces of information. In this case, I opted to merge the remaining pieces with the second column
+
+--
+
+  * `fill` tells the function that if there are not enough pieces to fill our two new columns then fill the columns with `NA` starting from the right.
+---
+## Example 1: `mtcars`
+
+```{r echo=FALSE,warning=FALSE,echo=FALSE}
+# example of extracting and formatting rownames into useful columns
+mtcars %>% 
+  select(1:9) %>% 
+  rownames_to_column("make_model") %>% 
+  separate(make_model,
+           into = c("make","model"),
+           extra = "merge",
+           sep = " ",
+           fill = "right") %>% 
+  DT::datatable(fillContainer = FALSE,
+                options = list(pageLength = 9))
+```
+---
+class: inverse
+
+.hex-sticker[![](../slides/images/tidyr.png)]
+
+## Long vs Wide Format
+
+--
+
+Often our data is easier to enter in wide format. Each row contains all attributes pertaining to a particular subject. Often, some `R` functions require our data to be in long format.
+
+--
+
+I generated some fictitious data to illustrate this.
+
+In this example, I "administered" a math test to 5 subjects. Each subject wrote the same test at three time points, an initial baseline, a high-stress condition, and a low-stress condition.
+
+
+```{r wide_data_example, echo = FALSE,message=FALSE,highlight.output=c(2)}
+data_wide <-  tibble(id = 1:5,
+                     age = round(rnorm(5, 21, sd = 3),0),
+                     baseline = rnorm(5,
+                                     mean = 50, sd = 5),
+                     high_stress = rnorm(5,
+                                     mean = 40, sd = 5),
+                     low_stress = rnorm(5,
+                                     mean = 60, sd = 5))
+  
+data_wide
+```
+
+???
+What might not be immediately evident is that there is a variable buried in the names of our columns, a factor called condition with three levels.
+
+---
+class: inverse
+
+.hex-sticker[![](../slides/images/tidyr.png)]
+
+## Long to Wide Format
+
+We can convert our data into wide-format using functions from the `tidyr` package.
+
+`pivot_longer()` will work.
+  * there is another function, `gather()` which is commonly used
+
+We need to supply it with a few arguments:
+  1. the data we want to transform
+  2. the columns we want to "gather" together into a new column/variable
+    * the new column is referred to as the "key"
+  3. the column we want the values from the cells to be placed into
+    * the new column is referred to as the "value" column
+
+---
+class: inverse
+.hex-sticker[![](../slides/images/tidyr.png)]
+## `pivot_longer()`
+
+```{r}
+data_wide %>% 
+  pivot_longer(cols = c(baseline,high_stress,low_stress),
+               names_to = "condition",
+               values_to = "math_score")
+```
+
+---
+class: inverse
+.hex-sticker[![](../slides/images/tidyr.png)]
+## `gather()`
+
+```{r}
+data_wide %>% 
+  gather(key = "condition",
+         value = "math_score",
+         baseline, high_stress, low_stress)
+```
+```{r echo=FALSE}
+data_long <- data_wide %>% 
+  gather(key = "condition",
+         value = "math_score",
+         baseline, high_stress, low_stress)
+```
+
+
+---
+class: inverse
+.hex-sticker[![](../slides/images/tidyr.png)]
+## Long to Wide Format
+
+```{r}
+data_long %>% 
+    pivot_wider(names_from = "condition",
+                values_from = "math_score")
+```
+
+```{r}
+data_long %>% 
+  spread(key = "condition", value = "math_score")
+```
+
+---
+
+class: inverse
+
+.hex-sticker[![](../slides/images/stringr.png)]
+
+## Regular Expressions
+
+--
+
+Sometimes when you are cleaning up character data you might need ensure that data conforms to a particular pattern.
+
+One common example would be to perform operations on a set of variables that follow a unique naming convention.
+  * e.g., BDI1 is the first item from the Beck Depression Inventory
+  
+
+Regular expression can be used to check that data follow a particular form, we can also use regular expression to split our variables into multiple columns.
+
+---
+class: inverse
+
+## Regular Expressions: Crash Course
+
+Regular expressions are written as strings (surrounded by quotation marks or double quotation marks).
+
+The pattern is matched a single character at time, unless told otherwise.
+
+So a pattern of "hello" would find exact matches for those characters.
+
+There are pre-defined character class to make it easier to create more complex patterns.
+
+There are many shorhand ways to write out these pre-defined character classes:
+
+  * \d - a digit
+  * \s - a white space character (tab, space)
+  * \w - any word character
+---
+class:inverse
+
+.hex-sticker[![](../slides/images/stringr.png)]
+
+## More Complex Patterns
+
+.pull-left[
+#### **Quantifiers**
+
+  * `?` zero or one matches
+  * `*` zero or more matches
+  * `+` one or more matches
+  * `{n}` exactly n matches
+  * `{n,}` n or more matches
+
+#### **Look-Arounds**
+
+  * a(?=c)
+    * a is followed by c
+  * a(?!c)
+    * a is not followed by c
+  * (?<=b)a
+    * a is preceded by b
+  * (?<!b)a
+    * a is not preceded by b
+]
+
+.pull-right[
+
+#### **Alternates**
+
+  * a|b
+    * means a or b
+  * [abc]
+    * defines your own character class, one of the set
+  * [a-c]
+    * defines a logical sequence of characters
+    
+#### **Anchors**
+
+  * ^
+    * Start of a string
+  * $
+    * End of a string
+]
+
+---
+class: inverse
+
+## Regular Expression: Matching A Date
+
+
+Say we want to ensure that dates to conform to ISO 8601: yyyy/mm/dd
+
+To create a regular expression, we can go character-by-character and replace the string with character classed.
+
+  * Year:
+    * \d\d\d\d
+  * Month:
+    * \d\d
+  * Day:
+    * \d\d
+  * The forward slashes "/"
+    * /
+    * We want to exactly match the forward slash, so it remains as is.
+    
+--
+
+Together, our regular expression looks like this: <mark>"\d\d\d\d/\d\d/\d\d"</mark>
+
+We can shorten it to: <mark>"\d{4}/\d{2}/\d{2}"</mark>
+???
+So, this pattern can be read as: 4 digits, a forward slash, 2 digits, forward slash, followed by 2 digits.
+---
+class: inverse
+class: inverse
+
+## stringr
+
+.hex-sticker[![](../slides/images/stringr.png)]
+
+This link will download the cheat sheet:
+
+https://github.com/rstudio/cheatsheets/raw/master/strings.pdf
+
+This link has all of the help documentation and listing of available funcions:
+
+https://www.rdocumentation.org/packages/stringr/versions/1.4.0
+
+---
+class:inverse 
+.hex-sticker[![](../slides/images/stringr.png)]
+## Regular Expression Testing
+
+```{r}
+# Check a column of dates for ISO 8601 format
+str_detect(string = c("2020/07/19",
+                      "20/07/19"),
+           pattern = "\\d{2,4}/\\d{2}/\\d{2}")
+
+# Examine where (if at all) our pattern can be found in a string
+str_view_all("Hello world!", pattern = "(?<=d)\\!")
+
+# stringr also has extra character classes (see the cheat sheet)
+str_view_all("Hello world! Good-bye.", pattern = "[:punct:]")
+```
+---
+class: inverse
+
+## More complicated example
+
+I found an openly available dataset examining longitudinal change in sleep and daytime sleepiness in postpartum women (Filtness, MacKenzie, & Armstrong, 2014).
+
+  * Self report measures were taken for 7 consecutive days for postpartum weeks 6, 12, and 18
+  * TSS - is the Total Sleep Time
+  * KSS - is the Karolinski Sleepiness Scale
+  * ESS - Epworth Sleepiness Scale
+
+.footnote[
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
+]
+
+---
+
+## Examine the Column Names to Find a Pattern
+
+Let's take a look at the data
+```{r echo=FALSE}
+data_sleep_depriv <- readxl::read_xlsx(here("data","Copy of journal.pone.0103513.s002.XLSX"))
+
+colnames(data_sleep_depriv) %>% 
+  tibble %>% 
+    datatable(fillContainer = FALSE,
+            options = list(pageLength = 7))
+```
+---
+class: inverse
+
+## Complicated Example Solution
+
+--
+```{r pivot_longer_sleep_data, eval=FALSE}
+
+data_sleep_depriv %>% 
+  pivot_longer(cols = starts_with("Week"),
+               names_to = c("Week","Measure"),
+               names_prefix = "Week",
+               values_to = c("Score"),
+               names_sep = "(?<=\\d) (?!=)")
+
+```
+
+---
+class: inverse
+
+## Take Home Message
+
+  * Having data in a "tidy" format gives us a lot of power and flexibility.
+  * Converting between long and wide formats can be necessary for particular analyses in R, so I suggest practising.
+  * Anytime you need to match patterns, regular expression can be indispensable
+---
+class: inverse
+
+## Resources:
+
+  * Filtness, A.J.; MacKenzie, J.; Armstrong, K. (2014): Sleep and daytime sleepiness in postpartum women at 6, 12 and 18 weeks. Queensland University of Technology. (Dataset) https://doi.org/10.4225/09/586b2c39dbec8
+  
+Regular Expressions:
+  * Online exercises - [https://regexone.com/](https://regexone.com/)
+  
+Tidyr: [https://tidyr.tidyverse.org/articles/pivot.html](https://tidyr.tidyverse.org/articles/pivot.html)

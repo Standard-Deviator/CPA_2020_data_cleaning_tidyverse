@@ -1,0 +1,448 @@
+---
+title: "Better Data Cleaning using R and the Tidyverse"
+subtitle: "Section 3: Profiling Missing Data"
+author: "Mark Christopher Adkins"
+institute: "York University"
+date: "2020/06/08 (last updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    css: ["default","extra.css"]
+    seal: false
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      titleSlideClass: ["middle","center","inverse"]
+---
+class: inverse
+
+background-image: url(../slides/images/better_data_cleaning_splash_slide_section_3.png)
+background-position: center
+background-size: contain
+---
+class: inverse
+
+## Outline
+
+  1. [Missing Data Profiling](#missingdata)
+  2. [Handling Dates](#dates)
+---
+class: inverse
+names: missingdata
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+library(here)
+library(DT)
+library(tidyverse)
+library(naniar)
+```
+
+## Missing Data
+
+Missing data can be tricky and problematic, but profiling patterns of missingness in a dataset need not be.
+
+We will be using the following packages in this section.
+
+```{r eval=FALSE}
+install.packages(c("tidyverse","here","naniar"))
+```
+
+--
+
+Don't forget to load the packages after the install is complete.
+
+```{r load_libraries, eval=FALSE}
+library(tidyverse)
+library(here)
+library(naniar)
+```
+---
+class: inverse
+
+## Missing Data: Load the Data
+
+```{r eval=TRUE,messsage=FALSE,warning=FALSE}
+# Run the entire cleaning script to reproduce our cleaned version of the superhero data
+source(here("scripts","cleaning_script.R"))
+```
+---
+class: inverse
+
+## Let's Take a Peak at the Data
+```{r}
+# Take a peak inside to ensure that it was loaded correctly
+glimpse(data_superhero)
+```
+---
+class: inverse
+.hex-sticker[![](../slides/images/naniar.png)]
+## Visualize Missingness by Column
+
+--
+.pull-left[
+```{r eval=FALSE}
+# generate missing data visualization by columns
+gg_miss_var(data_superhero,
+            show_pct = TRUE)
+```
+]
+
+.pull-right[
+```{r echo=FALSE}
+# generate missing data visualization by columns
+gg_miss_var(data_superhero,
+            show_pct = TRUE) +
+  theme(text = element_text(size = 22))
+```
+]
+
+---
+class: inverse
+
+## Visualize Intersections of Missingness
+
+While understanding how much data is missing in each column is important information, when trying to find patterns of missingness you need to examine the intersections of missingness.
+
+--
+
+In essence, we might want to know the percentage of our data which has missing `weight` and `height`.
+
+--
+
+This could help us when we make assumptions about patterns of missingness.
+
+---
+class: inverse
+.hex-sticker[![](../slides/images/naniar.png)]
+## Creating an Upset Plot
+
+
+```{r eval=FALSE,out.height="550px",out.width="750px"}
+gg_miss_upset(data_superhero,
+              nsets = 5,
+              nintersects = NA,
+              text.scale = c(2,1,1,1,2,1.3))
+```
+
+We need to specify the dataset we want to use, the number of sets (which variables) to include, and the number of interactions we want to examine.
+
+If you set the `ninteractions` arugment to `NA`, then all interactions using the given variables will be displayed.
+---
+class: inverse,middle, center
+.hex-sticker[![](../slides/images/naniar.png)]
+```{r echo=FALSE,out.height="550px",out.width="750px"}
+gg_miss_upset(data_superhero,
+              nsets = 5,
+              nintersects = NA,
+              text.scale = c(2,1,1,1,2,1.3))
+```
+
+---
+class: inverse
+.hex-sticker[![](../slides/images/naniar.png)]
+
+## Shadow Matrix
+
+A handy way to examine conditional missingness is to construct a shadow matrix [(Swayne and Buja, 1998)](https://www.researchgate.net/publication/2758672_Missing_Data_in_Interactive_High-Dimensional_Data_Visualization). This matrix has the same dimensions as the original dataset, but each column now has a parallel column which tracks the missingness of its partner.
+
+There are two ways of quickly constructing the shadow matrix: one way creates the matrix as a new dataset, the other appends the shadow matrix to the original dataset column-wise.
+
+```{r eval=FALSE}
+# create a shadow matrix of the superhero dataset
+as_shadow(data_superhero)
+
+# add the shadow matrix to the side of the superhero dataset
+bind_shadow(data_superhero)
+```
+---
+class: inverse
+.hex-sticker[![](../slides/images/naniar.png)]
+
+## Shadow Matrix: Profiling
+
+.pull-left[
+```{r eval=FALSE,warning=FALSE}
+data_superhero %>% 
+  bind_shadow() %>% 
+  ggplot(aes(x = weight,
+             fill = height_NA)) +
+  geom_density(alpha = .5)
+```
+
+  * Start with the superhero dataset, then ...
+  * append the shadow matrix, then ...
+  * construct a canvas using weight on the x-axis, and fill by using whether height is missing or not, then ...
+  * generate a density plot with some transparency
+  
+]
+
+.pull-right[
+```{r echo=FALSE,warning=FALSE}
+data_superhero %>% 
+  bind_shadow() %>% 
+  ggplot(aes(x = weight,
+             fill = height_NA)) +
+  geom_density(alpha = .5) +
+  theme(text = element_text(size = 22))
+```
+]
+---
+class: inverse
+name: dates
+
+## Working With Dates, Times, and Date-Times
+
+--
+
+Dealing with dates can be tricky as there are many ways to write a date.
+
+I recommend changing your dates to align with the [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601). The general principle behind this standard is ordering the date/time from the largest units to the smallest units. Adhering to this standard makes it clear how your data is stored and makes it easier to use.
+
+  * 2020/03/04: is this March 4th, 2020; or April 3rd, 2020?
+  * 20/03/05: is this March 20th, 2005; or June 3rd, 2020?
+  
+Unless you document how the date is stored, only you will know the correct date.
+
+???
+The lubridate package has many handy function for managing three kinds of data:
+  * date-time: which is stored as the number of seconds since 1970-01-01 00:00:00 UTC
+  * date: which is stored as the number of days since 1970-01-01
+  * time: which is stored as the number of seconds since 00:00:00
+  
+---
+class: inverse
+.hex-sticker[![](../slides/images/lubridate.png)]
+
+## Lubridate
+
+Let's try an example. This fictitious data was "collected" in March of 2020 across two different collection sites (A and B). We can start by loading the "date_time_data.csv" file and taking a peak.
+
+```{r import_date_data, message=FALSE}
+library(lubridate)
+```
+
+``` {r}
+data_dates <- read_csv(here("data",
+                            "date_time_data.csv"))
+```
+
+---
+.hex-sticker[![](../slides/images/lubridate.png)]
+
+## Lubridate
+
+```{r echo=FALSE}
+data_dates %>% 
+  # mutate(date = as.Date(date, origin = "1899-12-30"),
+  #        date = date + years(50)) %>% 
+    datatable(fillContainer = FALSE,
+                options = list(pageLength = 9))
+```
+
+---
+class: inverse
+
+## Pro-Tip: Excel Dates
+
+It can happen that dates stored in excel files are treated as numeric. One way to get around this is to convert using the `as.Date()` function from base R and alter the `origin` argument.
+
+```{r }
+# excel commonly uses an origin of 1899-12-30 for storing dates as a number
+as.Date(43900.00, origin = "1899-12-30")
+```
+---
+class: inverse
+.hex-sticker[![](../slides/images/lubridate.png)]
+
+## Lubridate: Parsing Dates
+
+Looking at our data, it seems that "Site A" and "Site B" used different conventions for storing the dates. Right now, the dates are both stored as character data. We will need to take care when converting them in order to continue working with them error-free.
+
+You can specify the format ordering using the following key:
+  * year (y)
+  * month (m)
+  * day (d)
+  * hour (h)
+  * minute (m)
+  * second (s)
+
+Lubridate has many parsing functions that are simply combinations of the keys above which reflect the date format in your data.
+---
+class: inverse
+.hex-sticker[![](../slides/images/lubridate.png)]
+
+## Lubridate:: Parsing Dates
+
+The lubridate has many built-in functions using a variery of common formats. For example, one could use the function `ymd_hms()` to convert a string or number into a year, month, day, hour minute second date-time object. One could also use `ymd()` for a date object, or `hms()` for a time object.
+
+```{r}
+# If we assumed that all of the dates followed the format year month day
+ymd(data_dates$date) #<<
+
+# If we assumed that all of the dates followed the format day month year
+dmy(data_dates$date) #<<
+```
+---
+class: inverse
+.hex-sticker[![](../slides/images/lubridate.png)]
+
+## Lubridate:: Parsing Dates
+
+Let's use a handy function from the dplyr package `dplyr::case_when`. It operates similar to the `dplyr::if_else()` function we used in section one, but it permits us to check multiple conditions within the one function.
+
+Each argument is an expression. The left-side of the expression is a logical comparison, when that comparison evaluates as true, then that rows value becomes the value from the right-side of the expression.
+
+```{r echo=FALSE}
+# fix the dates depending on which site and the format that was used
+data_dates <- data_dates %>% 
+  mutate(date_corrected = case_when(site == "Site A" ~ ymd(date),
+                                    site == "Site B" ~ dmy(date),
+                                    TRUE ~ NA_Date_)) #<<
+```
+
+```{r eval=FALSE}
+# fix the dates depending on which site and the format that was used
+data_dates %>% 
+  mutate(date_corrected = case_when(site == "Site A" ~ ymd(date), #<<
+                                    site == "Site B" ~ dmy(date), #<<
+                                    TRUE ~ NA_Date_))
+```
+???
+
+As a rule, always include an additional "catch-all" argument for in case a value being transformed doesn't meet any of the other criteria.
+
+Also note, that there special types of missing data that follow the form NA_Date_
+---
+.hex-sticker[![](../slides/images/lubridate.png)]
+
+## Lubridate
+
+```{r echo=FALSE}
+data_dates %>% 
+  # mutate(date = as.Date(date, origin = "1899-12-30"),
+  #        date = date + years(50)) %>% 
+    datatable(fillContainer = FALSE,
+                options = list(pageLength = 9))
+```
+
+---
+class: inverse
+.hex-sticker[![](../slides/images/lubridate.png)]
+
+## Lubridate: Intervals
+
+We can also check that all dates fall within a valid range of dates.
+
+```{r highlight.output=c(4)}
+# define a valid interval for data collection
+data_collection_period <-  interval(ymd("2020/03/01"),
+                                    ymd("2020/03/31"))
+
+data_dates %>% 
+  filter(!(date_corrected %within% data_collection_period)) #<<
+```
+
+---
+class: inverse
+.hex-sticker[![](../slides/images/lubridate.png)]
+
+## Lubridate: Getting and Setting
+
+The lubridate package provides many handy functions getting and setting components of date, time, and date-time values. These can be useful for correcting specific dates (either by over-writing the incorrect piece of the date or by incrementing the date by specific values).
+
+```{r get_set_examples, out.height="400px",out.width="400px"}
+# create a date-time to use for this example
+date_time_example <- ymd_hms("2020-07-26 10:00:00")
+date_time_example
+
+# extract the year component
+year(date_time_example) #<<
+
+# change the year to 2019 because we are all tired of 2020
+year(date_time_example) <- 2019 #<<
+date_time_example
+```
+---
+class: inverse
+.hex-sticker[![](../slides/images/lubridate.png)]
+
+## Lubridate: Date Arithmetic
+
+There are functions which can add periods of time by pluralizing the functions we use for getting and setting values (e.g., `year()` vs. `years()`).
+
+Let's fix that futuristic date collected from "Site B".
+
+```{r eval=FALSE}
+# manually correct the one date of collection fromthe future (year == 2021)
+data_dates %>%
+  mutate(date_corrected = if_else(condition = year(date_corrected) == 2021,
+                        true = date_corrected - years(1), #<<
+                        false = date_corrected))
+```
+
+```{r echo=FALSE}
+# manually correct the one date of collection fromthe future (year == 2021)
+data_dates <- data_dates %>%
+  mutate(date_corrected = if_else(condition = year(date_corrected) == 2021,
+                        true = date_corrected - years(1), #<<
+                        false = date_corrected))
+```
+---
+class: inverse
+.hex-sticker[![](../slides/images/lubridate.png)]
+
+## Lubridate: Visualizing Dates and Times
+.pull-left[
+```{r eval=FALSE}
+data_dates %>% 
+  ggplot(aes(x = date_corrected,
+             y = time_collected)) + 
+  geom_point() +
+  geom_hline(yintercept= hms("09-00-00"),
+             color = "red") +
+  geom_hline(yintercept= hms("17-00-00"),
+             color = "red") +
+  scale_y_time() +
+  scale_x_date() +
+  theme(text = element_text(size = 22))
+```
+]
+
+.pull-right[
+```{r echo=FALSE}
+data_dates %>% 
+ggplot(aes(x = date_corrected, y = time_collected)) + 
+  geom_point(size = 2) +
+  geom_hline(yintercept= hms("09-00-00"),
+             color = "red") +
+  geom_hline(yintercept= hms("17-00-00"),
+             color = "red") +
+  scale_y_time() +
+  scale_x_date() +
+  theme(text = element_text(size = 22))
+```
+]
+---
+class: inverse
+
+## Take Home Message
+
+  * Understanding how, why, and where your data is missing is crucial
+    * We might not ever know for sure why data is missing, but examing where it is missing could help us with our assumptions about missingness
+  * Importing dates into R from Excel can be tricky
+    * Always check that the dates are still correct
+    * Using intervals can be a great way to check
+
+---
+class: inverse
+
+## Resources:
+
+Naniar Package: [http://naniar.njtierney.com/index.html](http://naniar.njtierney.com/index.html)
+
+Lubridate:
+  * Blog post - [https://lubridate.tidyverse.org/](https://lubridate.tidyverse.org/)
+  * Cheat Sheet - [https://github.com/rstudio/cheatsheets/raw/master/lubridate.pdf](https://github.com/rstudio/cheatsheets/raw/master/lubridate.pdf)
+  * R4DS Book Chapter - [http://r4ds.had.co.nz/dates-and-times.html](http://r4ds.had.co.nz/dates-and-times.html)

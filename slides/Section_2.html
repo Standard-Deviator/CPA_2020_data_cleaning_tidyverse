@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Better Data Cleaning using R and the Tidyverse</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Mark Christopher Adkins" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <script src="libs/htmlwidgets/htmlwidgets.js"></script>
+    <script src="libs/jquery/jquery.min.js"></script>
+    <link href="libs/datatables-css/datatables-crosstalk.css" rel="stylesheet" />
+    <script src="libs/datatables-binding/datatables.js"></script>
+    <link href="libs/dt-core/css/jquery.dataTables.min.css" rel="stylesheet" />
+    <link href="libs/dt-core/css/jquery.dataTables.extra.css" rel="stylesheet" />
+    <script src="libs/dt-core/js/jquery.dataTables.min.js"></script>
+    <link href="libs/crosstalk/css/crosstalk.css" rel="stylesheet" />
+    <script src="libs/crosstalk/js/crosstalk.min.js"></script>
+    <link href="libs/str_view/str_view.css" rel="stylesheet" />
+    <script src="libs/str_view-binding/str_view.js"></script>
+    <link rel="stylesheet" href="extra.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+
+class: inverse
+
+background-image: url(../slides/images/better_data_cleaning_splash_slide_section_2.png)
+background-position: center
+background-size: contain
+---
+class: center, inverse
+
+
+
+
+&lt;/br&gt;&lt;/br&gt;&lt;/br&gt;
+
+.left[
+&gt; “Happy families are all alike; every unhappy family is unhappy in its own way.”
+
+]
+.right[Leo Tolstoy]
+
+--
+
+&lt;/br&gt;&lt;/br&gt;&lt;/br&gt;
+
+.left[
+&gt; “Tidy datasets are all alike, but every messy dataset is messy in its own way.”
+
+]
+
+.right[Hadley Wickham]
+
+---
+class: inverse
+
+## Tidy Data
+
+There are three aspects of tidy data
+
+  1. Each variable forms a column.
+  2. Each observation forms a row.
+  3. Each type of observational unit forms a table.
+
+If we can get data into this form, then analyses and plots are much easier to generate.
+
+---
+class: inverse
+
+## The Usual Suspects
+
+Often, it's the first guideline that I find is the usual culprit.
+
+Multiple variables are encoded together within a single column.
+  * e.g., Participant ID
+    * 100m25
+    * This is the 100th subject who is a 25 year-old male
+
+--
+
+Another culprit is to have information captured in the variable names.
+  * This is often done regarding study design features
+    * e.g., Condition or time value was recorded
+    
+But sometimes, it can be hard to see "problems". So let's try an example.
+
+???
+Wickham, H. (2014). Tidy data. Journal of Statistical Software, 59(10), 1-23.
+
+---
+
+## Example 1: `mtcars`
+Let's take a look at the `mtcars` data set. It has 32 rows and 11 columns. Only 8 columns are shown here.
+
+<div id="htmlwidget-a4c625b73b965bd154cf" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-a4c625b73b965bd154cf">{"x":{"filter":"none","fillContainer":false,"data":[["Mazda RX4","Mazda RX4 Wag","Datsun 710","Hornet 4 Drive","Hornet Sportabout","Valiant","Duster 360","Merc 240D","Merc 230","Merc 280","Merc 280C","Merc 450SE","Merc 450SL","Merc 450SLC","Cadillac Fleetwood","Lincoln Continental","Chrysler Imperial","Fiat 128","Honda Civic","Toyota Corolla","Toyota Corona","Dodge Challenger","AMC Javelin","Camaro Z28","Pontiac Firebird","Fiat X1-9","Porsche 914-2","Lotus Europa","Ford Pantera L","Ferrari Dino","Maserati Bora","Volvo 142E"],[21,21,22.8,21.4,18.7,18.1,14.3,24.4,22.8,19.2,17.8,16.4,17.3,15.2,10.4,10.4,14.7,32.4,30.4,33.9,21.5,15.5,15.2,13.3,19.2,27.3,26,30.4,15.8,19.7,15,21.4],[6,6,4,6,8,6,8,4,4,6,6,8,8,8,8,8,8,4,4,4,4,8,8,8,8,4,4,4,8,6,8,4],[160,160,108,258,360,225,360,146.7,140.8,167.6,167.6,275.8,275.8,275.8,472,460,440,78.7,75.7,71.1,120.1,318,304,350,400,79,120.3,95.1,351,145,301,121],[110,110,93,110,175,105,245,62,95,123,123,180,180,180,205,215,230,66,52,65,97,150,150,245,175,66,91,113,264,175,335,109],[3.9,3.9,3.85,3.08,3.15,2.76,3.21,3.69,3.92,3.92,3.92,3.07,3.07,3.07,2.93,3,3.23,4.08,4.93,4.22,3.7,2.76,3.15,3.73,3.08,4.08,4.43,3.77,4.22,3.62,3.54,4.11],[2.62,2.875,2.32,3.215,3.44,3.46,3.57,3.19,3.15,3.44,3.44,4.07,3.73,3.78,5.25,5.424,5.345,2.2,1.615,1.835,2.465,3.52,3.435,3.84,3.845,1.935,2.14,1.513,3.17,2.77,3.57,2.78],[16.46,17.02,18.61,19.44,17.02,20.22,15.84,20,22.9,18.3,18.9,17.4,17.6,18,17.98,17.82,17.42,19.47,18.52,19.9,20.01,16.87,17.3,15.41,17.05,18.9,16.7,16.9,14.5,15.5,14.6,18.6],[0,0,1,1,0,1,0,1,1,1,1,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,0,1,0,0,0,1]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>mpg<\/th>\n      <th>cyl<\/th>\n      <th>disp<\/th>\n      <th>hp<\/th>\n      <th>drat<\/th>\n      <th>wt<\/th>\n      <th>qsec<\/th>\n      <th>vs<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":7,"columnDefs":[{"className":"dt-right","targets":[1,2,3,4,5,6,7,8]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[7,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
+
+???
+
+But it also has information stored as rownames, these should be a vector in the data.frame. Furthermore, each row name contains the make and model of each car. Let's break these apart.
+
+---
+class: inverse
+
+.hex-sticker[![](../slides/images/tibble.png)]
+
+## Example 1: `mtcars`
+
+The first step is to extract the row names and make them a variable within our data.frame/tibble.
+
+**Remember** - always give good, descriptive names
+
+
+```r
+mtcars %&gt;% 
+* rownames_to_column(var = "make_model") %&gt;%
+  View()
+```
+---
+
+## Example 1: `mtcars`
+
+Let's check the results. Again, only a subset of columns are displayed here.
+
+<div id="htmlwidget-506efd05cb1cc1f0d137" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-506efd05cb1cc1f0d137">{"x":{"filter":"none","fillContainer":false,"data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32"],["Mazda RX4","Mazda RX4 Wag","Datsun 710","Hornet 4 Drive","Hornet Sportabout","Valiant","Duster 360","Merc 240D","Merc 230","Merc 280","Merc 280C","Merc 450SE","Merc 450SL","Merc 450SLC","Cadillac Fleetwood","Lincoln Continental","Chrysler Imperial","Fiat 128","Honda Civic","Toyota Corolla","Toyota Corona","Dodge Challenger","AMC Javelin","Camaro Z28","Pontiac Firebird","Fiat X1-9","Porsche 914-2","Lotus Europa","Ford Pantera L","Ferrari Dino","Maserati Bora","Volvo 142E"],[21,21,22.8,21.4,18.7,18.1,14.3,24.4,22.8,19.2,17.8,16.4,17.3,15.2,10.4,10.4,14.7,32.4,30.4,33.9,21.5,15.5,15.2,13.3,19.2,27.3,26,30.4,15.8,19.7,15,21.4],[6,6,4,6,8,6,8,4,4,6,6,8,8,8,8,8,8,4,4,4,4,8,8,8,8,4,4,4,8,6,8,4],[160,160,108,258,360,225,360,146.7,140.8,167.6,167.6,275.8,275.8,275.8,472,460,440,78.7,75.7,71.1,120.1,318,304,350,400,79,120.3,95.1,351,145,301,121],[110,110,93,110,175,105,245,62,95,123,123,180,180,180,205,215,230,66,52,65,97,150,150,245,175,66,91,113,264,175,335,109],[3.9,3.9,3.85,3.08,3.15,2.76,3.21,3.69,3.92,3.92,3.92,3.07,3.07,3.07,2.93,3,3.23,4.08,4.93,4.22,3.7,2.76,3.15,3.73,3.08,4.08,4.43,3.77,4.22,3.62,3.54,4.11],[2.62,2.875,2.32,3.215,3.44,3.46,3.57,3.19,3.15,3.44,3.44,4.07,3.73,3.78,5.25,5.424,5.345,2.2,1.615,1.835,2.465,3.52,3.435,3.84,3.845,1.935,2.14,1.513,3.17,2.77,3.57,2.78]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>make_model<\/th>\n      <th>mpg<\/th>\n      <th>cyl<\/th>\n      <th>disp<\/th>\n      <th>hp<\/th>\n      <th>drat<\/th>\n      <th>wt<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":7,"columnDefs":[{"className":"dt-right","targets":[2,3,4,5,6,7]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[7,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
+---
+class: inverse
+
+## Example 1: `mtcars`
+
+For the next step we want to break apart or `separate()` the make_model column into two pieces.
+
+--
+
+.hex-sticker[![](../slides/images/tidyr.png)]
+The easy part is finding a function which can do this.
+
+--
+
+The hard part is telling the function exactly where to perform the splitting operation so that we have the model in one column and the make of the car in the other.
+
+
+```r
+mtcars %&gt;% 
+  rownames_to_column(var = "make_model") %&gt;% 
+* separate(col = ,
+*          into = ,
+*          sep = )
+```
+--
+
+  * `col` specifies the column we want to break apart
+  * `into` specifies the names of the columns we want to break it into
+  * `sep` is the break point
+---
+class: inverse
+
+.hex-sticker[![](../slides/images/tidyr.png)]
+
+## Example 1: `mtcars`
+
+
+```r
+mtcars %&gt;% 
+  rownames_to_column(var = "make_model") %&gt;% 
+* separate(col = "make_model",
+*          into = c("make","model"),
+*          sep = " ")
+```
+
+```
+## Warning: Expected 2 pieces. Additional pieces discarded in 3 rows [2, 4, 29].
+```
+
+```
+## Warning: Expected 2 pieces. Missing pieces filled with `NA` in 1 rows [6].
+```
+
+--
+
+The first warning tells us that using a space character as the break point of the `make_model` column resulted in three pieces when we expected only 2 pieces (though only for 3 rows in our dataset).
+
+--
+
+The second warning tells us that 1 row in our data set did not have any spaces at all.
+
+--
+
+This means that we need to tell our `separate()` function how we want to handle this potential loss of information.
+---
+class: inverse
+
+.hex-sticker[![](../slides/images/tidyr.png)]
+
+## Example 1: `mtcars`
+
+
+```r
+mtcars %&gt;% 
+  rownames_to_column(var = "make_model") %&gt;% 
+  separate(col = "make_model",
+           into = c("make","model"),
+           sep = " ",
+*          extra = "merge",
+*          fill = "right")
+```
+--
+
+--
+
+  * `extra` tells the function what to do with the extra pieces of information. In this case, I opted to merge the remaining pieces with the second column
+
+--
+
+  * `fill` tells the function that if there are not enough pieces to fill our two new columns then fill the columns with `NA` starting from the right.
+---
+## Example 1: `mtcars`
+
+<div id="htmlwidget-68577acc1a79b5f59ab3" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-68577acc1a79b5f59ab3">{"x":{"filter":"none","fillContainer":false,"data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32"],["Mazda","Mazda","Datsun","Hornet","Hornet","Valiant","Duster","Merc","Merc","Merc","Merc","Merc","Merc","Merc","Cadillac","Lincoln","Chrysler","Fiat","Honda","Toyota","Toyota","Dodge","AMC","Camaro","Pontiac","Fiat","Porsche","Lotus","Ford","Ferrari","Maserati","Volvo"],["RX4","RX4 Wag","710","4 Drive","Sportabout",null,"360","240D","230","280","280C","450SE","450SL","450SLC","Fleetwood","Continental","Imperial","128","Civic","Corolla","Corona","Challenger","Javelin","Z28","Firebird","X1-9","914-2","Europa","Pantera L","Dino","Bora","142E"],[21,21,22.8,21.4,18.7,18.1,14.3,24.4,22.8,19.2,17.8,16.4,17.3,15.2,10.4,10.4,14.7,32.4,30.4,33.9,21.5,15.5,15.2,13.3,19.2,27.3,26,30.4,15.8,19.7,15,21.4],[6,6,4,6,8,6,8,4,4,6,6,8,8,8,8,8,8,4,4,4,4,8,8,8,8,4,4,4,8,6,8,4],[160,160,108,258,360,225,360,146.7,140.8,167.6,167.6,275.8,275.8,275.8,472,460,440,78.7,75.7,71.1,120.1,318,304,350,400,79,120.3,95.1,351,145,301,121],[110,110,93,110,175,105,245,62,95,123,123,180,180,180,205,215,230,66,52,65,97,150,150,245,175,66,91,113,264,175,335,109],[3.9,3.9,3.85,3.08,3.15,2.76,3.21,3.69,3.92,3.92,3.92,3.07,3.07,3.07,2.93,3,3.23,4.08,4.93,4.22,3.7,2.76,3.15,3.73,3.08,4.08,4.43,3.77,4.22,3.62,3.54,4.11],[2.62,2.875,2.32,3.215,3.44,3.46,3.57,3.19,3.15,3.44,3.44,4.07,3.73,3.78,5.25,5.424,5.345,2.2,1.615,1.835,2.465,3.52,3.435,3.84,3.845,1.935,2.14,1.513,3.17,2.77,3.57,2.78],[16.46,17.02,18.61,19.44,17.02,20.22,15.84,20,22.9,18.3,18.9,17.4,17.6,18,17.98,17.82,17.42,19.47,18.52,19.9,20.01,16.87,17.3,15.41,17.05,18.9,16.7,16.9,14.5,15.5,14.6,18.6],[0,0,1,1,0,1,0,1,1,1,1,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,0,1,0,0,0,1],[1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>make<\/th>\n      <th>model<\/th>\n      <th>mpg<\/th>\n      <th>cyl<\/th>\n      <th>disp<\/th>\n      <th>hp<\/th>\n      <th>drat<\/th>\n      <th>wt<\/th>\n      <th>qsec<\/th>\n      <th>vs<\/th>\n      <th>am<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":9,"columnDefs":[{"className":"dt-right","targets":[3,4,5,6,7,8,9,10,11]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[9,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
+---
+class: inverse
+
+.hex-sticker[![](../slides/images/tidyr.png)]
+
+## Long vs Wide Format
+
+--
+
+Often our data is easier to enter in wide format. Each row contains all attributes pertaining to a particular subject. Often, some `R` functions require our data to be in long format.
+
+--
+
+I generated some fictitious data to illustrate this.
+
+In this example, I "administered" a math test to 5 subjects. Each subject wrote the same test at three time points, an initial baseline, a high-stress condition, and a low-stress condition.
+
+
+
+```
+## # A tibble: 5 x 5
+*##      id   age baseline high_stress low_stress
+##   &lt;int&gt; &lt;dbl&gt;    &lt;dbl&gt;       &lt;dbl&gt;      &lt;dbl&gt;
+## 1     1    24     39.0        40.3       65.4
+## 2     2    18     57.9        36.9       67.6
+## 3     3    21     53.9        30.1       58.9
+## 4     4    24     53.5        48.8       66.9
+## 5     5    24     48.2        36.6       53.2
+```
+
+???
+What might not be immediately evident is that there is a variable buried in the names of our columns, a factor called condition with three levels.
+
+---
+class: inverse
+
+.hex-sticker[![](../slides/images/tidyr.png)]
+
+## Long to Wide Format
+
+We can convert our data into wide-format using functions from the `tidyr` package.
+
+`pivot_longer()` will work.
+  * there is another function, `gather()` which is commonly used
+
+We need to supply it with a few arguments:
+  1. the data we want to transform
+  2. the columns we want to "gather" together into a new column/variable
+    * the new column is referred to as the "key"
+  3. the column we want the values from the cells to be placed into
+    * the new column is referred to as the "value" column
+
+---
+class: inverse
+.hex-sticker[![](../slides/images/tidyr.png)]
+## `pivot_longer()`
+
+
+```r
+data_wide %&gt;% 
+  pivot_longer(cols = c(baseline,high_stress,low_stress),
+               names_to = "condition",
+               values_to = "math_score")
+```
+
+```
+## # A tibble: 15 x 4
+##       id   age condition   math_score
+##    &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;            &lt;dbl&gt;
+##  1     1    24 baseline          39.0
+##  2     1    24 high_stress       40.3
+##  3     1    24 low_stress        65.4
+##  4     2    18 baseline          57.9
+##  5     2    18 high_stress       36.9
+##  6     2    18 low_stress        67.6
+##  7     3    21 baseline          53.9
+##  8     3    21 high_stress       30.1
+##  9     3    21 low_stress        58.9
+## 10     4    24 baseline          53.5
+## 11     4    24 high_stress       48.8
+## 12     4    24 low_stress        66.9
+## 13     5    24 baseline          48.2
+## 14     5    24 high_stress       36.6
+## 15     5    24 low_stress        53.2
+```
+
+---
+class: inverse
+.hex-sticker[![](../slides/images/tidyr.png)]
+## `gather()`
+
+
+```r
+data_wide %&gt;% 
+  gather(key = "condition",
+         value = "math_score",
+         baseline, high_stress, low_stress)
+```
+
+```
+## # A tibble: 15 x 4
+##       id   age condition   math_score
+##    &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;            &lt;dbl&gt;
+##  1     1    24 baseline          39.0
+##  2     2    18 baseline          57.9
+##  3     3    21 baseline          53.9
+##  4     4    24 baseline          53.5
+##  5     5    24 baseline          48.2
+##  6     1    24 high_stress       40.3
+##  7     2    18 high_stress       36.9
+##  8     3    21 high_stress       30.1
+##  9     4    24 high_stress       48.8
+## 10     5    24 high_stress       36.6
+## 11     1    24 low_stress        65.4
+## 12     2    18 low_stress        67.6
+## 13     3    21 low_stress        58.9
+## 14     4    24 low_stress        66.9
+## 15     5    24 low_stress        53.2
+```
+
+
+
+---
+class: inverse
+.hex-sticker[![](../slides/images/tidyr.png)]
+## Long to Wide Format
+
+
+```r
+data_long %&gt;% 
+    pivot_wider(names_from = "condition",
+                values_from = "math_score")
+```
+
+```
+## # A tibble: 5 x 5
+##      id   age baseline high_stress low_stress
+##   &lt;int&gt; &lt;dbl&gt;    &lt;dbl&gt;       &lt;dbl&gt;      &lt;dbl&gt;
+## 1     1    24     39.0        40.3       65.4
+## 2     2    18     57.9        36.9       67.6
+## 3     3    21     53.9        30.1       58.9
+## 4     4    24     53.5        48.8       66.9
+## 5     5    24     48.2        36.6       53.2
+```
+
+
+```r
+data_long %&gt;% 
+  spread(key = "condition", value = "math_score")
+```
+
+```
+## # A tibble: 5 x 5
+##      id   age baseline high_stress low_stress
+##   &lt;int&gt; &lt;dbl&gt;    &lt;dbl&gt;       &lt;dbl&gt;      &lt;dbl&gt;
+## 1     1    24     39.0        40.3       65.4
+## 2     2    18     57.9        36.9       67.6
+## 3     3    21     53.9        30.1       58.9
+## 4     4    24     53.5        48.8       66.9
+## 5     5    24     48.2        36.6       53.2
+```
+
+---
+
+class: inverse
+
+.hex-sticker[![](../slides/images/stringr.png)]
+
+## Regular Expressions
+
+--
+
+Sometimes when you are cleaning up character data you might need ensure that data conforms to a particular pattern.
+
+One common example would be to perform operations on a set of variables that follow a unique naming convention.
+  * e.g., BDI1 is the first item from the Beck Depression Inventory
+  
+
+Regular expression can be used to check that data follow a particular form, we can also use regular expression to split our variables into multiple columns.
+
+---
+class: inverse
+
+## Regular Expressions: Crash Course
+
+Regular expressions are written as strings (surrounded by quotation marks or double quotation marks).
+
+The pattern is matched a single character at time, unless told otherwise.
+
+So a pattern of "hello" would find exact matches for those characters.
+
+There are pre-defined character class to make it easier to create more complex patterns.
+
+There are many shorhand ways to write out these pre-defined character classes:
+
+  * \d - a digit
+  * \s - a white space character (tab, space)
+  * \w - any word character
+---
+class:inverse
+
+.hex-sticker[![](../slides/images/stringr.png)]
+
+## More Complex Patterns
+
+.pull-left[
+#### **Quantifiers**
+
+  * `?` zero or one matches
+  * `*` zero or more matches
+  * `+` one or more matches
+  * `{n}` exactly n matches
+  * `{n,}` n or more matches
+
+#### **Look-Arounds**
+
+  * a(?=c)
+    * a is followed by c
+  * a(?!c)
+    * a is not followed by c
+  * (?&lt;=b)a
+    * a is preceded by b
+  * (?&lt;!b)a
+    * a is not preceded by b
+]
+
+.pull-right[
+
+#### **Alternates**
+
+  * a|b
+    * means a or b
+  * [abc]
+    * defines your own character class, one of the set
+  * [a-c]
+    * defines a logical sequence of characters
+    
+#### **Anchors**
+
+  * ^
+    * Start of a string
+  * $
+    * End of a string
+]
+
+---
+class: inverse
+
+## Regular Expression: Matching A Date
+
+
+Say we want to ensure that dates to conform to ISO 8601: yyyy/mm/dd
+
+To create a regular expression, we can go character-by-character and replace the string with character classed.
+
+  * Year:
+    * \d\d\d\d
+  * Month:
+    * \d\d
+  * Day:
+    * \d\d
+  * The forward slashes "/"
+    * /
+    * We want to exactly match the forward slash, so it remains as is.
+    
+--
+
+Together, our regular expression looks like this: &lt;mark&gt;"\d\d\d\d/\d\d/\d\d"&lt;/mark&gt;
+
+We can shorten it to: &lt;mark&gt;"\d{4}/\d{2}/\d{2}"&lt;/mark&gt;
+???
+So, this pattern can be read as: 4 digits, a forward slash, 2 digits, forward slash, followed by 2 digits.
+---
+class: inverse
+class: inverse
+
+## stringr
+
+.hex-sticker[![](../slides/images/stringr.png)]
+
+This link will download the cheat sheet:
+
+https://github.com/rstudio/cheatsheets/raw/master/strings.pdf
+
+This link has all of the help documentation and listing of available funcions:
+
+https://www.rdocumentation.org/packages/stringr/versions/1.4.0
+
+---
+class:inverse 
+.hex-sticker[![](../slides/images/stringr.png)]
+## Regular Expression Testing
+
+
+```r
+# Check a column of dates for ISO 8601 format
+str_detect(string = c("2020/07/19",
+                      "20/07/19"),
+           pattern = "\\d{2,4}/\\d{2}/\\d{2}")
+```
+
+```
+## [1] TRUE TRUE
+```
+
+```r
+# Examine where (if at all) our pattern can be found in a string
+str_view_all("Hello world!", pattern = "(?&lt;=d)\\!")
+```
+
+<div id="htmlwidget-b559e4a5ec8403ade0e5" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-b559e4a5ec8403ade0e5">{"x":{"html":"<ul>\n  <li>Hello world<span class='match'>!<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+
+```r
+# stringr also has extra character classes (see the cheat sheet)
+str_view_all("Hello world! Good-bye.", pattern = "[:punct:]")
+```
+
+<div id="htmlwidget-9842cb761db8877aaea7" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-9842cb761db8877aaea7">{"x":{"html":"<ul>\n  <li>Hello world<span class='match'>!<\/span> Good<span class='match'>-<\/span>bye<span class='match'>.<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+---
+class: inverse
+
+## More complicated example
+
+I found an openly available dataset examining longitudinal change in sleep and daytime sleepiness in postpartum women (Filtness, MacKenzie, &amp; Armstrong, 2014).
+
+  * Self report measures were taken for 7 consecutive days for postpartum weeks 6, 12, and 18
+  * TSS - is the Total Sleep Time
+  * KSS - is the Karolinski Sleepiness Scale
+  * ESS - Epworth Sleepiness Scale
+
+.footnote[
+&lt;a rel="license" href="http://creativecommons.org/licenses/by/4.0/"&gt;&lt;img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /&gt;&lt;/a&gt;&lt;br /&gt;This work is licensed under a &lt;a rel="license" href="http://creativecommons.org/licenses/by/4.0/"&gt;Creative Commons Attribution 4.0 International License&lt;/a&gt;.
+]
+
+---
+
+## Examine the Column Names to Find a Pattern
+
+Let's take a look at the data
+<div id="htmlwidget-8a52415db49c95516d41" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-8a52415db49c95516d41">{"x":{"filter":"none","fillContainer":false,"data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43"],["Participant number","Age","Recruitment time (1 = pre birth, 2 = post birth)","Marital status (1 = Married / De facto / Partner)","Other child (1 = no, 2 = yes)","Education level  (1= Junior certificate, 2 = senior certificate, 3 = associate diploma, 4 = diploma, 5 = degree, 6 = honours degree, 7 = masters or Ph.D.)","Returned to full time work by week 18 (0 = no, 1 = yes)","Week 6 mean nocturnal TST (min)","Week 12 mean nocturnal TST (min)","Week 18 mean nocturnal TST (min)","Week 6 mean initial nocturnal sleep period (min)","Week 12 mean initial nocturnal sleep period (min)","Week 18 mean initial nocturnal sleep period (min)","Week 6 mean longest nocturnal sleep episode (min)","Week 12 mean longest nocturnal sleep episode (min)","Week 18 mean longest nocturnal sleep episode (min)","Week 6 Wake after sleep onset (min)","Week 12 Wake after sleep onset (min)","Week 18 Wake after sleep onset (min)","Week 6 Sleep disturbance index (%)","Week 12 Sleep disturbance index (%)","Week 18 Sleep disturbance index (%)","Week 6 mean number of waking's during nocturnal sleep period (n)","Week 12 mean number of waking's during nocturnal sleep period (n)","Week 18 mean number of waking's during nocturnal sleep period (n)","Week 6 mean day time sleep (min)","Week 12 mean day time sleep (min)","Week 18 mean day time sleep (min)","Week 6 mean KSS","Week 12 mean KSS","Week 18 mean KSS","Week 6 ESS","Week 12 ESS","Week 18 ESS","Week 6 EDS (0 = no, 1 = yes)","Week 12 EDS (0 = no, 1 = yes)","Week 18 EDS (0 = no, 1 = yes)","Week 6 exclusively breast feeding ( 0 = no, 1 = yes)","Week 12 exclusively breast feeding ( 0 = no, 1 = yes)","Week 18 exclusively breast feeding ( 0 = no, 1 = yes)","Week 6 exclusively providing all night time infant care (1 = yes, 0 = no)","Week 12 exclusively providing all night time infant care (1 = yes, 0 = no)","Week 18 exclusively providing all night time infant care (1 = yes, 0 = no)"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>.<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":7,"order":[],"autoWidth":false,"orderClasses":false,"columnDefs":[{"orderable":false,"targets":0}],"lengthMenu":[7,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
+---
+class: inverse
+
+## Complicated Example Solution
+
+--
+
+```r
+data_sleep_depriv %&gt;% 
+  pivot_longer(cols = starts_with("Week"),
+               names_to = c("Week","Measure"),
+               names_prefix = "Week",
+               values_to = c("Score"),
+               names_sep = "(?&lt;=\\d) (?!=)")
+```
+
+---
+class: inverse
+
+## Take Home Message
+
+  * Having data in a "tidy" format gives us a lot of power and flexibility.
+  * Converting between long and wide formats can be necessary for particular analyses in R, so I suggest practising.
+  * Anytime you need to match patterns, regular expression can be indispensable
+---
+class: inverse
+
+## Resources:
+
+  * Filtness, A.J.; MacKenzie, J.; Armstrong, K. (2014): Sleep and daytime sleepiness in postpartum women at 6, 12 and 18 weeks. Queensland University of Technology. (Dataset) https://doi.org/10.4225/09/586b2c39dbec8
+  
+Regular Expressions:
+  * Online exercises - [https://regexone.com/](https://regexone.com/)
+  
+Tidyr: [https://tidyr.tidyverse.org/articles/pivot.html](https://tidyr.tidyverse.org/articles/pivot.html)
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
