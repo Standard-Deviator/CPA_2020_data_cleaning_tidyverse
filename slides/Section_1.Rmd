@@ -248,7 +248,10 @@ mtcars %>%
   filter(cyl == 4)
 ```
 ]
+--
 
+There is a keyboard shortcut in RStudio to insert the pipe operator
+ctrl+shift+m or cmd+shift+m
 ???
 
 Tab completion for variable names
@@ -264,6 +267,8 @@ class: inverse
 .hex-sticker[![](https://upload.wikimedia.org/wikipedia/en/thumb/8/80/Wikipedia-logo-v2.svg/220px-Wikipedia-logo-v2.svg.png)]
 
 ## Data Cleaning/Cleansing
+
+--
 
 Data Quality can be broken down into a few categories:
   * Validity
@@ -468,6 +473,30 @@ glimpse(data_superhero)
 ```{r}
 n_distinct(data_superhero$X1)
 ```
+---
+class:inverse
+
+## Unique Constraints
+
+--
+
+A unique constraint is a restriction imposed on a variable to allow for a particular observation unit to be identifiable and distinct from all other observational units.
+
+In other words each value in this variable <mark>MUST</mark> be associated with one (and only one) observation.
+
+One of the main uses of this type of constraint is unique identifiers for each subject of analysis to prevent spill-over or contamination.
+
+--
+
+For instance, each subject should have their own ID such that all data are properly attributed to that subject.
+
+Same goes for structurally nested data like education data where students are studied within classrooms, with schools.
+Each individual subject should be have a unique identifier, each classroom, and each school.
+
+???
+Some functions within R might require such a variable in order to run an analysis (such as repeated-measures, or longitudinal analyses).
+
+They can also be immensely useful for merging data sources together (more on this later).
 
 ---
 class: inverse
@@ -618,6 +647,22 @@ glimpse(data_superhero)
 ---
 class: inverse
 
+## Range Constraints
+
+--
+
+Range constraints require a little more thought. It all depends on knowing your data, and cleaning your data essentially is getting to know your data in greater detail to be able to make informed decisions about problems.
+
+For instance, if you have data which represents counts of things (e.g., number of symptoms, cigarettes smoked within a certain time frame), these can be checked by you.
+
+Likewise, some variables cannot take on negative values as their scale of measurement renders negative values non-sensical (e.g., heights and weights). Even a value of zero might not be a valid value to observe.
+
+Sometimes, variables might have a valid lower boundary, upper boundary, or both.
+
+---
+
+class: inverse
+
 ## Example of Lower Boundary Constraints
 
 Check for "out-of-range" heights and weights. 
@@ -650,7 +695,7 @@ class: inverse
 
 ## Example of Boundary Constraints
 
-Dplyr has a `between()` function which can be helpful when used in conjunction with the negation operator `!`
+Dplyr has a `between()` function which can be helpful when used in conjunction with the negation operator <mark>`!`</mark>
 
 ```{r}
 # What if we were to assume that any height larger than 300cm is abnormally large?
@@ -956,7 +1001,7 @@ data_superhero <- data_superhero %>%
             .funs = str_to_lower)
 ```
 --
-.hex-sticker[![](../slides/images/pipe.png)]
+.hex-sticker[![](../slides/images/Mario_pipe.png)]
 ---
 class: inverse
 
@@ -1267,53 +1312,6 @@ survey_data %>%
   View
 ```
 
-
----
-class: inverse
-
-.hex-sticker[![](https://upload.wikimedia.org/wikipedia/en/thumb/8/80/Wikipedia-logo-v2.svg/220px-Wikipedia-logo-v2.svg.png)]
-
-## Validity
-
-Validity can be further sub-categorized, and we will spend time checking each of these aspects of your data using R and the Tidyverse.
-
-  * Data-Type Constraints
-  * <mark>Range Constraints</mark>
-  * Mandatory Constraints  
-  * Unique Constraints  
-  * Set-Membership  
-  * Regular Expressions  
-  * Cross-field validation  
----
-class: inverse
-
-## Range Constraint
-
-Range constraints require a little more thought. It all depends on knowing your data, and cleaning your data essentially is getting to know your data in greater detail to be able to make informed decisions about problems.
-
-For instance, if you have data which represents counts of things (e.g., number of symptoms, cigarettes smoked within a certain time frame), these can be checked by you.
-
-Likewise, some variables cannot take on negative values as their scale of measurement renders negative values non-sensical (e.g., heights and weights). Even a value of zero might not be a valid value to observe.
-
-Sometimes, variables might have a valid lower boundary, upper boundary, or both.
-
----
-class: inverse
-
-.hex-sticker[![](https://upload.wikimedia.org/wikipedia/en/thumb/8/80/Wikipedia-logo-v2.svg/220px-Wikipedia-logo-v2.svg.png)]
-
-## Validity
-
-Validity can be further sub-categorized, and we will spend time checking each of these aspects of your data using R and the Tidyverse.
-
-  * Data-Type Constraints
-  * Range Constraints
-  * <mark>Mandatory Constraints</mark> 
-  * Unique Constraints  
-  * Set-Membership  
-  * Regular Expressions  
-  * Cross-field validation 
-
 ---
 class: inverse
 
@@ -1322,263 +1320,23 @@ class: inverse
 In a nutshell, this pertains to variables in your data which <mark>MUST NOT</mark> be missing. For instance, subject/participant numbers, and key variables for modelling should all be present.
 
 Constraints can be univariate (like an ID variable) or multivariate (like an ID variable, and multiple time-points)
----
-class: inverse
-
-Missing data will be dealt with more fully later.
-
-```{r eval = FALSE}
-n <- 10
-data_mand_constr <- tibble(id = 1:n,
-                           time_1 = rnorm(n),
-                           time_2 = rnorm(n),
-                           time_3 = rnorm(n)) %>% 
-  gather(key = "timepoint",
-         value = "score",
-         starts_with("time")) %>% 
-  separate(timepoint,
-           into =c("time","timepoint"),
-           sep="_") %>% 
-  select(-time) %>%
-  mutate(timepoint = parse_number(timepoint))
-```
-
-```{r echo = FALSE}
-n <- 10
-tibble(id = 1:n,
-                           time_1 = rnorm(n),
-                           time_2 = rnorm(n),
-                           time_3 = rnorm(n)) %>% 
-  gather(key = "timepoint",
-         value = "score",
-         starts_with("time")) %>% 
-  separate(timepoint,
-           into =c("time","timepoint"),
-           sep="_") %>% 
-  select(-time) %>%
-  mutate(timepoint = parse_number(timepoint))
-```
----
-class: inverse
-
-.hex-sticker[![](https://upload.wikimedia.org/wikipedia/en/thumb/8/80/Wikipedia-logo-v2.svg/220px-Wikipedia-logo-v2.svg.png)]
-
-## Validity
-
-Validity can be further sub-categorized, and we will spend time checking each of these aspects of your data using R and the Tidyverse.
-
-  * Data-Type Constraints
-  * Range Constraints
-  * Mandatory Constraints 
-  * <mark>Unique Constraints</mark> 
-  * Set-Membership  
-  * Regular Expressions  
-  * Cross-field validation 
-
----
-class:inverse
-
-## Unique Constraints
-
-A unique constraint is a restriction imposed on a variable to allow for a particular observation unit to be identifiable and distinct from all other observational units.
-
-In other words each value in this variable <mark>MUST</mark> be associated with one (and only one) observation.
-
-One of the main uses of this type of constraint is unique identifiers for each subject of analysis to prevent spill-over or contamination.
-
---
-
-For instance, each subject should have their own ID such that all data are properly attributed to that subject. Same goes for structurally nested data like education data where students are studied within classrooms, with schools.
-Each individual subject should be have a unique identifier, each classroom, and each school.
-
-???
-Some functions within R might require such a variable in order to run an analysis (such as repeated-measures, or longitudinal analyses).
-
-They can also be immensely useful for merging data sources together (more on this later).
----
-class:inverse
-
-## Unique Constraints
-
-Let's try checking this out using the superhero data set (exercises_section_1.R)
-
-```{r}
-# check how many rows in the data
-# This is assuming that each row represents a unique subject
-nrow(data_superhero)
-
-# How many unique values are in the uniquely constrained variable?
-n_distinct(data_superhero$id)
-```
----
-class:inverse
-
-## Unique Constraints
-
-This approach can also be used to check for uniqueness across multiple variables.
-
-```{r}
-# check how many rows in the data
-# This is assuming that each row represents a unique subject
-nrow(data_superhero)
-
-# How many unique values are in the uniquely constrained variable?
-n_distinct(data_superhero$name)
-```
-
-???
-
-Keep in mind that as long as one of the variables checked this way is completely unique, then the result will indicate that the set of variables will also be unique.
-
-Check individual variables first.
----
-class: inverse
-
-We can also build chains of functions to look deeper into the `name` issue we just found.
-
-```{r echo=FALSE}
-# How many uniques values are there in a vector?
-# This is equivalent to length(unique(data_superhero$ID))
-n_distinct(data_superhero$id)
-
-unique_names <- data_superhero %>% 
-  distinct(name)
-
-# Alternatively, we can tabulate the number of rows with unique ID using the count() function
-# We can then chain that by filtering for any value in the tbale with n > 1, that is more than 1 row having the same ID value (it should return a tibble with zero rows)
-dupe_names <- data_superhero %>% 
-  count(name) %>% 
-  filter(n > 1) %>% 
-  pull(name)
-
-data_superhero %>% 
-  filter(name %in% dupe_names)
-
-# Maybe we want to find rows or dupe_names which only contain a name
-data_superhero %>% 
-  naniar::add_n_miss()
-```
----
-class: inverse
-
-We could also assess this visually.
-``` {r echo = FALSE}
-# take our tabular data (as a tibble), and plot it
-p <- data_superhero %>% 
-  ggplot(aes(x = id)) +
-  geom_bar()
-
-# generate interactive plot
-plotly::ggplotly(p)
-```
 
 ---
 class: inverse
 
-We could also assess this visually.
-``` {r}
-# take our tabular data (as a tibble), and plot it
-p <- data_superhero %>% 
-  ggplot(aes(x = name)) +
-  geom_bar()
+## Take Home Message
 
-# generate interactive plot
-plotly::ggplotly(p)
-```
-
----
-class: inverse
-
-.hex-sticker[![](https://upload.wikimedia.org/wikipedia/en/thumb/8/80/Wikipedia-logo-v2.svg/220px-Wikipedia-logo-v2.svg.png)]
-
-## Validity
-
-Validity can be further sub-categorized, and we will spend time checking each of these aspects of your data using R and the Tidyverse.
-
-  * Data-Type Constraints
-  * Range Constraints
-  * Mandatory Constraints  
-  * Unique Constraints  
-  * <mark>Set-Membership</mark> 
-  * Regular Expressions  
-  * Cross-field validation  
----
-class: inverse
-
-## Set Membership
-
-.hex-sticker[![](../slides/images/forcats.png)]
-
-This refers to categorical/discrete data, or FACTORS. Factors should be used when there is a known and fixed set of values which can be observed. Sometimes, you might have a sense of the possible values, but there could be more. Consider an open ended questions about gender identity or more trivially a subject's favourite colour. I might be hard to include options for the numerous way a subject might respond prior to seeing your data.
-
---
-
-The Forcats package has made my R life much easier.
-
-We briefly touched upon the readr::parse_factor() function already, but there are many other operations we might want to do with categorical data. Especially, if it is hard to foresee all of the possible levels in a variable.
-
-???
-
-Forcats is an anagram of the word factors.
----
-class: inverse
-
-## Set Membership
-
-.hex-sticker[![](../slides/images/forcats.png)]
-
-If we want to get a tabular count of observations per grouping level, but if you have a many possible levels in your factor, then you might want to consolidate (for diagnostic or analytic purposes).
-
-Keep in mind that the resulting levels should still have substantive meaning (if you can help it).
-
-Take for instance, that for eye colours for superheroes are predominantly blue, green, or brown.
-```{r}
-fct_count(data_superhero$eye_color) %>% 
-  arrange(desc(n))
-
-# We can say that any color with only a few (3 or less count could be group into an "other" catagory)
-fct_lump_min(data_superhero$eye_color,min = 3) %>% 
-  fct_infreq() %>% 
-  tibble %>% 
-  ggplot(aes(x = 1)) +
-  geom_bar()
-```
-
+  * Cleaning your data can still be a time consuming (but important) endeavour.
+    * Care must be taken at each step to ensure that our data is as error-free as possible
+  * There isn't a definitive checklist for data quality, but there are some things to look for depending on the type of data you are dealing with.
+  * Know what to look for takes practice, and the R code presented today should hopefully speed up your data cleaning
+  * Remember, cleaning can be an iterative process.
+    * Each error you fix has the potential to uncover another previously obfuscated errors.
 
 
 ---
 class: inverse
-.pull-left[
-```{r}
-n_distinct(data_superhero$eye_color)
-```
-]
 
-.pull-right[
-``` {r}
-fct_count(data_superhero$eye_color) %>% 
-  arrange(desc(n))
-data_superhero %>% 
-  count(eye_color) %>% 
-  arrange(desc(n))
-```
-]
----
-class: inverse
+## Pro-tip
 
-```{r}
-data_superhero %>% 
-  group_by(alignment,gender) %>% 
-  count
-```
----
-class: inverse
-
-``` {r}
-data_superhero %>% 
-  ggplot(aes(x = eye_color, group = alignment)) +
-  geom_bar() +
-  facet_grid(~alignment)
-```
-
-
+Check out the tidylog package!
