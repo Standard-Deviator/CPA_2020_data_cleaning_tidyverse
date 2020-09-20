@@ -38,3 +38,5 @@ data_superhero <- read_csv(file = here("data",
          skin_color =  if_else(condition = skin_color == "gray",
                                true = "grey",
                                false = skin_color))
+
+write_csv(data_superhero,here("data","superhero_cleaned.csv"))
